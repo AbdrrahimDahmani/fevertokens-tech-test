@@ -1,20 +1,23 @@
 /* eslint-disable @next/next/no-img-element */
 
-import Image from "next/image";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 const CoinChart = dynamic(() => import("@/components/CoinChart"), {
   ssr: false,
 });
+
+const headerOptions = {
+  headers: {
+    "x-cg-demo-api-key": process.env.NEXT_PUBLIC_COINGEEKO_API_KEY,
+    accept: "application/json",
+  },
+};
+
 const fetchCoins = async () => {
   try {
     const res = await fetch(
       "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=2&sparkline=false&locale=en",
-      {
-        headers: {
-          "x-cg-demo-api-key": "CG-aVR2Qp2ACRFuSpBrXwDcZfTm",
-          accept: "application/json",
-        },
-      }
+      headerOptions
     );
     const data = await res.json();
     return data;
@@ -23,16 +26,11 @@ const fetchCoins = async () => {
   }
 };
 
-const fetchCoinChartData = async (id) => {
+export const fetchCoinChartData = async (id) => {
   try {
     const res = await fetch(
       `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=7`,
-      {
-        headers: {
-          "x-cg-demo-api-key": "CG-aVR2Qp2ACRFuSpBrXwDcZfTm",
-          accept: "application/json",
-        },
-      }
+      headerOptions
     );
     const data = await res.json();
     const formattedData = data.prices.map(([time, value]) => ({
@@ -101,14 +99,19 @@ export default async function Home() {
                   </th>
                   <th
                     scope="row"
-                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white flex"
+                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                   >
-                    <img
-                      className="w-5 mr-2"
-                      src={coin.image}
-                      alt={coin.name}
-                    />
-                    {coin.name}
+                    <Link
+                      href={`/coins/${coin.name.toLowerCase()}`}
+                      className="flex"
+                    >
+                      <img
+                        className="w-5 mr-2"
+                        src={coin.image}
+                        alt={coin.name}
+                      />
+                      {coin.name}
+                    </Link>
                   </th>
                   <th
                     scope="row"
