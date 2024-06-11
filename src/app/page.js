@@ -1,6 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
+
 import Image from "next/image";
-import { createChart, CrosshairMode } from "lightweight-charts";
+import dynamic from "next/dynamic";
+const CoinChart = dynamic(() => import("@/components/CoinChart"), {
+  ssr: false,
+});
 const fetchCoins = async () => {
   try {
     const res = await fetch(
@@ -19,9 +23,37 @@ const fetchCoins = async () => {
   }
 };
 
+const fetchCoinChartData = async (id) => {
+  try {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=7`,
+      {
+        headers: {
+          "x-cg-demo-api-key": "CG-aVR2Qp2ACRFuSpBrXwDcZfTm",
+          accept: "application/json",
+        },
+      }
+    );
+    const data = await res.json();
+    const formattedData = data.prices.map(([time, value]) => ({
+      time: Math.floor(time / 1000),
+      value,
+    }));
+    return formattedData;
+  } catch (error) {
+    console.log(error);
+  }
+};
 export default async function Home() {
-  const coins = await fetchCoins();
-  console.log(coins.length);
+  const fetchedCoins = await fetchCoins();
+  console.log(fetchedCoins.length);
+  const coins = await Promise.all(
+    fetchedCoins.map(async (coin) => {
+      const chartData = await fetchCoinChartData(coin.id);
+      return { ...coin, chartData };
+    })
+  );
+
   return (
     <main className="flex  flex-col items-center justify-between p-5">
       <div className="flex flex-col items-center justify-between p-8">
@@ -44,13 +76,13 @@ export default async function Home() {
                 <div className="flex items-center">Market cap </div>
               </th>
               <th scope="col" className="px-6 py-3">
-                <div className="flex items-center">24h price change</div>
+                <div className="flex items-center">24h</div>
               </th>
               <th scope="col" className="px-6 py-3">
                 <div className="flex items-center">Rank</div>
               </th>
               <th scope="col" className="px-6 py-3">
-                <div className="flex items-center"></div>
+                <div className="flex items-center ">chart</div>
               </th>
             </tr>
           </thead>
@@ -114,6 +146,12 @@ export default async function Home() {
                     className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                   >
                     {coin.market_cap_rank}
+                  </th>
+                  <th
+                    scope="row"
+                    className="px-6  font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                  >
+                    <CoinChart data={coin.chartData} />
                   </th>
                 </tr>
               ))
