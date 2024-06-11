@@ -6,11 +6,11 @@ First, clone the project and install the dependencies:
 
 ```bash
 git clone https://github.com/AbdrrahimDahmani/fevertokens-tech-test.git
-``
+
 cd fevertokens-tech-test
-``
+
 pnpm  install
-``
+
 pnpm run build
 ```
 
