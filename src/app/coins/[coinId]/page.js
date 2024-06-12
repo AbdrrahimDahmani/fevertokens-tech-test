@@ -11,10 +11,11 @@ import { useCallback } from "react";
 import { fetchCoinChartData } from "@/app/page";
 import CoinBaseLineChart from "@/components/CoinBaseLineChart";
 import { faStar } from "@fortawesome/free-regular-svg-icons";
+import { useRouter } from "next/navigation";
 
 const fetchCoinData = async (coinId) => {
   const response = await fetch(
-    `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinId}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/coins/markets?vs_currency=usd&ids=${coinId}`,
     {
       headers: {
         "x-cg-demo-api-key": process.env.NEXT_PUBLIC_COINGEEKO_API_KEY,
@@ -36,27 +37,30 @@ export default function CoinDetails({ params }) {
     const chartData = await fetchCoinChartData(params.coinId);
     setChartData(chartData);
   }, [params.coinId]);
-
+  const router = useRouter();
   useEffect(() => {
     updateData();
+    const intervalId = setInterval(() => {
+      router.refresh();
+    }, 60000);
 
-    const interval = setInterval(() => {
-      updateData();
-    }, 120000);
-
-    return () => clearInterval(interval);
-  }, [updateData]);
-
-  const interval = setInterval(() => {
-    updateData();
-  }, 120000);
-  useEffect(() => {
-    return () => clearInterval(interval); // Cleanup interval on component unmount
-  }, [interval, params.coinId, updateData]);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [router, updateData]);
 
   return (
     <main className="container">
-      <div className="flex flex-row items-center justify-between p-8">
+      <div className="mt-8 mx-8">
+        <button
+          onClick={() => window.history.back()}
+          className="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded"
+        >
+          Go Back
+        </button>
+      </div>
+
+      <div className="flex flex-row items-center justify-between px-8">
         <div className="p-8">
           <span className="bg-blue-800 text-white  text-m font-medium me-2 px-3 py-2 rounded dark:bg-blue-900 dark:text-blue-300">
             Rank #{coinData?.market_cap_rank}

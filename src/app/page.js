@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
-
-import dynamic from "next/dynamic";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 const CoinChart = dynamic(() => import("@/components/CoinChart"), {
   ssr: false,
 });
@@ -13,23 +12,24 @@ const headerOptions = {
   },
 };
 
-const fetchCoins = async () => {
+const fetchCoins = async (page = 1, perPage = 10) => {
   try {
     const res = await fetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=2&sparkline=false&locale=en",
+      `${process.env.NEXT_PUBLIC_BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=false&locale=en`,
       headerOptions
     );
     const data = await res.json();
     return data;
   } catch (error) {
     console.log(error);
+    return [];
   }
 };
 
 export const fetchCoinChartData = async (id) => {
   try {
     const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=7`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/coins/${id}/market_chart?vs_currency=usd&days=7`,
       headerOptions
     );
     const data = await res.json();
@@ -40,11 +40,15 @@ export const fetchCoinChartData = async (id) => {
     return formattedData;
   } catch (error) {
     console.log(error);
+    return [];
   }
 };
-export default async function Home() {
-  const fetchedCoins = await fetchCoins();
-  console.log(fetchedCoins.length);
+
+export default async function Home({ searchParams }) {
+  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const perPage = 10; // Number of items per page
+  const fetchedCoins = await fetchCoins(page, perPage);
+
   const coins = await Promise.all(
     fetchedCoins.map(async (coin) => {
       const chartData = await fetchCoinChartData(coin.id);
@@ -53,7 +57,7 @@ export default async function Home() {
   );
 
   return (
-    <main className="flex  flex-col items-center justify-between p-5">
+    <main className="flex flex-col items-center justify-between p-5">
       <div className="flex flex-col items-center justify-between p-8">
         <h1 className="text-4xl font-bold">Welcome to the Coins Catalog</h1>
       </div>
@@ -71,7 +75,7 @@ export default async function Home() {
                 <div className="flex items-center">Price</div>
               </th>
               <th scope="col" className="px-6 py-3">
-                <div className="flex items-center">Market cap </div>
+                <div className="flex items-center">Market cap</div>
               </th>
               <th scope="col" className="px-6 py-3">
                 <div className="flex items-center">24h</div>
@@ -80,7 +84,7 @@ export default async function Home() {
                 <div className="flex items-center">Rank</div>
               </th>
               <th scope="col" className="px-6 py-3">
-                <div className="flex items-center ">chart</div>
+                <div className="flex items-center">Chart</div>
               </th>
             </tr>
           </thead>
@@ -95,14 +99,16 @@ export default async function Home() {
                     scope="row"
                     className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                   >
-                    {index + 1}
+                    {(page - 1) * perPage + index + 1}
                   </th>
                   <th
                     scope="row"
                     className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                   >
                     <Link
-                      href={`/coins/${coin.name.toLowerCase()}`}
+                      href={`/coins/${coin.name
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")}`}
                       className="flex"
                     >
                       <img
@@ -125,7 +131,6 @@ export default async function Home() {
                   >
                     {"$" + coin.market_cap}
                   </th>
-
                   <th
                     scope="row"
                     className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
@@ -152,7 +157,7 @@ export default async function Home() {
                   </th>
                   <th
                     scope="row"
-                    className="px-6  font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                   >
                     <CoinChart data={coin.chartData} />
                   </th>
@@ -170,6 +175,21 @@ export default async function Home() {
             )}
           </tbody>
         </table>
+      </div>
+      <div className="flex mt-4">
+        <Link href={`/?page=${page - 1}`} passHref>
+          <button
+            disabled={page === 1}
+            className="px-4 py-1 m-1 text-white bg-blue-700 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+        </Link>
+        <Link href={`/?page=${page + 1}`} passHref>
+          <button className="px-4 py-1 m-1 text-white bg-blue-700 rounded">
+            Next
+          </button>
+        </Link>
       </div>
     </main>
   );
