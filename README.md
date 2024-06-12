@@ -36,27 +36,35 @@ Here is the C code for `task2.c`:
 
 ```c
 #include <stdio.h>
-int main(){
-    for(int i=1; i<=100; i++){
+#include <stdio.h>
+
+int main() {
+    printf("%d,", 1);
+    for (int i = 2; i <= 100; i++) {
         int printed = 0;
-        if(i%3==0){
-            printf("Hello, ");
+        if (i % 3 == 0) {
+            printf(" Hello");
             printed = 1;
         }
-        if(i%5==0){
-            printf("World, ");
+        if (i % 5 == 0) {
+            printf(" World");
             printed = 1;
         }
-        if(i%7==0){
-            printf("Yoo, ");
+        if (i % 7 == 0) {
+            printf(" Yoo");
             printed = 1;
         }
-        if(printed == 0){
-            printf("%d, ", i);
+        if (!printed) {
+            printf(" %d", i);
+        }
+        if (i < 100) {
+            printf(",");
         }
     }
+    printf("\n");
     return 0;
 }
+
 ```
 
 And here is the result:
@@ -66,19 +74,23 @@ And here is the result:
 Here is the Python code for `task2.py`:
 
 ```python
-for i in range(1, 101):
+print(1, end=",")
+for i in range(2, 101):
     printed = False
     if i % 3 == 0:
-        print("Hello,", end=" ")
+        print(" Hello", end="")
         printed = True
     if i % 5 == 0:
-        print("World,", end=" ")
+        print(" World", end="")
         printed = True
     if i % 7 == 0:
-        print("Yoo,", end=" ")
+        print(" Yoo", end="")
         printed = True
     if not printed:
-        print(i, end=", ")
+        print(" {}".format(i), end="")
+    if i < 100:
+        print(",", end="")
+print()
 ```
 
 And here is the result:
